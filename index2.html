@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HAZEL // SYS.DESIGNER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #05020e;
+    --bg2: #0a0618;
+    --cyan: #00f0ff;
+    --magenta: #ff2bd6;
+    --yellow: #f9f871;
+    --purple: #8a2be2;
+    --grid: rgba(0,240,255,0.08);
+    --mono: 'Share Tech Mono', monospace;
+    --display: 'Orbitron', sans-serif;
+    --body: 'Rajdhani', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--body);
+    background: var(--bg);
+    color: #d7e6ff;
+    overflow-x: hidden;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  /* neon grid floor + scanlines */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px, transparent 2px, transparent 4px);
+    z-index: 9999;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    animation: flicker 6s infinite;
+  }
+  @keyframes flicker { 0%,95%,100%{opacity:1} 96%{opacity:.7} 97%{opacity:1} 98%{opacity:.5} }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 1; }
+
+  /* glow atmospheres */
+  .glow { position: fixed; border-radius: 50%; filter: blur(120px); z-index: 0; pointer-events: none; }
+  .glow.g1 { width: 480px; height: 480px; background: var(--magenta); opacity: .16; top: -120px; left: -120px; }
+  .glow.g2 { width: 520px; height: 520px; background: var(--cyan); opacity: .14; bottom: -160px; right: -140px; }
+
+  /* ---------- NAV ---------- */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 32px; z-index: 100;
+    background: rgba(5,2,14,0.6);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,240,255,0.2);
+  }
+  nav .logo { font-family: var(--display); font-weight: 800; font-size: 1.1rem; color: var(--cyan); letter-spacing: 2px; text-shadow: 0 0 12px var(--cyan); }
+  nav .links { display: flex; gap: 26px; }
+  nav a {
+    font-family: var(--mono); color: #9fb4d8; text-decoration: none;
+    font-size: 0.82rem; letter-spacing: 1px; transition: .2s; position: relative;
+  }
+  nav a:hover { color: var(--cyan); text-shadow: 0 0 8px var(--cyan); }
+  nav a::before { content:"> "; opacity:0; transition:.2s; }
+  nav a:hover::before { opacity:1; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+    max-width: 1100px; margin: 0 auto; padding: 120px 32px 80px;
+    position: relative; z-index: 1;
+  }
+  .hero .tag {
+    font-family: var(--mono); color: var(--magenta); font-size: 0.85rem;
+    letter-spacing: 3px; margin-bottom: 24px; text-shadow: 0 0 10px var(--magenta);
+  }
+  .hero .tag .blink { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50%{opacity:0} }
+
+  .hero h1 {
+    font-family: var(--display); font-weight: 900;
+    font-size: clamp(3.2rem, 13vw, 9rem); line-height: 0.9;
+    letter-spacing: -1px; color: #fff; position: relative;
+  }
+  /* glitch */
+  .glitch { position: relative; display: inline-block; }
+  .glitch::before, .glitch::after {
+    content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%;
+    overflow: hidden;
+  }
+  .glitch::before { color: var(--cyan); animation: gl1 2.6s infinite linear alternate-reverse; clip-path: inset(0 0 60% 0); }
+  .glitch::after  { color: var(--magenta); animation: gl2 2s infinite linear alternate-reverse; clip-path: inset(55% 0 0 0); }
+  @keyframes gl1 { 0%{transform:translate(0)} 20%{transform:translate(-3px,1px)} 40%{transform:translate(2px,-2px)} 60%{transform:translate(-2px,0)} 100%{transform:translate(2px,1px)} }
+  @keyframes gl2 { 0%{transform:translate(0)} 25%{transform:translate(3px,-1px)} 50%{transform:translate(-3px,2px)} 75%{transform:translate(1px,1px)} 100%{transform:translate(-2px,-1px)} }
+
+  .hero h1 .accent { color: var(--cyan); text-shadow: 0 0 24px var(--cyan); }
+
+  .hero .sub {
+    font-family: var(--body); font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+    color: #b7c8ea; margin-top: 30px; max-width: 560px; font-weight: 400;
+  }
+  .hero .sub b { color: var(--yellow); font-weight: 600; }
+
+  .hero .cta {
+    margin-top: 44px; display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--mono); font-size: 0.95rem; letter-spacing: 2px;
+    color: var(--bg); background: var(--cyan);
+    padding: 14px 30px; text-decoration: none; text-transform: uppercase;
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+    box-shadow: 0 0 24px rgba(0,240,255,0.5); transition: .2s; width: fit-content;
+  }
+  .hero .cta:hover { background: var(--magenta); box-shadow: 0 0 30px var(--magenta); transform: translateY(-2px); }
+
+  .hero .coords {
+    position: absolute; bottom: 40px; left: 32px;
+    font-family: var(--mono); font-size: 0.75rem; color: #52678f; letter-spacing: 1px;
+  }
+
+  /* ---------- SECTION ---------- */
+  section { padding: 100px 0; position: relative; z-index: 1; }
+  .sec-head { display: flex; align-items: center; gap: 16px; margin-bottom: 54px; }
+  .sec-head .bracket { font-family: var(--mono); color: var(--magenta); font-size: 1rem; }
+  .sec-head h2 {
+    font-family: var(--display); font-weight: 800; font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+    color: #fff; letter-spacing: 1px; text-transform: uppercase;
+  }
+  .sec-head .line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--cyan), transparent); }
+
+  /* ABOUT */
+  .about {
+    border: 1px solid rgba(0,240,255,0.25);
+    background: linear-gradient(135deg, rgba(0,240,255,0.04), rgba(255,43,214,0.04));
+    padding: 40px; position: relative;
+    clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+  }
+  .about .prompt { font-family: var(--mono); color: var(--cyan); font-size: 0.85rem; margin-bottom: 18px; }
+  .about p { font-size: 1.2rem; color: #cddcff; margin-bottom: 16px; font-weight: 300; }
+  .about p:last-child { margin-bottom: 0; }
+  .about b { color: var(--cyan); font-weight: 600; }
+  .about .neon-y { color: var(--yellow); font-weight: 500; }
+
+  /* SKILLS */
+  .skills { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); gap: 20px; }
+  .skill {
+    border: 1px solid rgba(138,43,226,0.35); background: rgba(10,6,24,0.6);
+    padding: 26px; position: relative; transition: .25s; overflow: hidden;
+  }
+  .skill::before {
+    content:""; position:absolute; top:0; left:-100%; width:100%; height:2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    transition:.5s;
+  }
+  .skill:hover { border-color: var(--cyan); transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,240,255,0.18); }
+  .skill:hover::before { left: 100%; }
+  .skill .no { font-family: var(--mono); color: var(--magenta); font-size: 0.8rem; }
+  .skill h3 { font-family: var(--display); font-weight: 600; font-size: 1.35rem; color: #fff; margin: 12px 0 8px; letter-spacing: .5px; }
+  .skill p { font-size: 0.95rem; color: #8ea3c9; font-weight: 300; }
+  .skill .bar { height: 4px; margin-top: 18px; background: rgba(255,255,255,0.08); position: relative; overflow: hidden; }
+  .skill .bar i { position:absolute; left:0; top:0; height:100%; background: linear-gradient(90deg, var(--cyan), var(--magenta)); box-shadow: 0 0 10px var(--cyan); }
+
+  /* CAREER */
+  .career {
+    border-left: 3px solid var(--magenta); padding: 28px 34px;
+    background: rgba(255,43,214,0.05); position: relative;
+  }
+  .career .status { font-family: var(--mono); font-size: 0.8rem; color: var(--yellow); letter-spacing: 2px; margin-bottom: 12px; display:flex; align-items:center; gap:8px; }
+  .career .status .dot { width: 9px; height: 9px; background: var(--yellow); border-radius: 50%; box-shadow: 0 0 10px var(--yellow); animation: blink 1.4s infinite; }
+  .career h3 { font-family: var(--display); font-weight: 700; font-size: clamp(1.5rem,4vw,2.2rem); color: #fff; letter-spacing: .5px; }
+  .career p { color: #a9bde0; margin-top: 8px; font-weight: 300; }
+
+  /* CONTACT */
+  .contact { text-align: center; padding-bottom: 130px; }
+  .contact .big {
+    font-family: var(--display); font-weight: 900; font-size: clamp(2rem, 7vw, 4.5rem);
+    color: #fff; letter-spacing: 1px; line-height: 1.1; margin-bottom: 36px;
+  }
+  .contact .big span { color: var(--cyan); text-shadow: 0 0 24px var(--cyan); }
+  .contact a.phone {
+    font-family: var(--mono); font-size: clamp(1.2rem,4vw,2rem); color: var(--yellow);
+    text-decoration: none; letter-spacing: 3px; border: 1px solid rgba(249,248,113,0.4);
+    padding: 16px 34px; display: inline-block; transition: .25s;
+    text-shadow: 0 0 12px rgba(249,248,113,0.6);
+  }
+  .contact a.phone:hover { background: var(--yellow); color: var(--bg); box-shadow: 0 0 30px var(--yellow); text-shadow:none; }
+
+  footer {
+    border-top: 1px solid rgba(0,240,255,0.2); padding: 30px 32px; position: relative; z-index: 1;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    font-family: var(--mono); font-size: 0.78rem; color: #52678f; letter-spacing: 1px;
+  }
+
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.show { opacity: 1; transform: none; }
+
+  /* ---------- GAMIFICATION HUD ---------- */
+  .hud {
+    position: fixed; top: 76px; right: 20px; z-index: 200;
+    width: 220px; padding: 14px 16px;
+    background: rgba(5,2,14,0.82); backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,240,255,0.35);
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 1px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    box-shadow: 0 0 24px rgba(0,240,255,0.15);
+  }
+  .hud .row { display: flex; justify-content: space-between; align-items: center; color: #7f96bf; }
+  .hud .lvl { color: var(--cyan); text-shadow: 0 0 8px var(--cyan); font-size: 0.9rem; }
+  .hud .xp-bar { height: 8px; margin: 8px 0 10px; background: rgba(255,255,255,0.08); position: relative; overflow: hidden; }
+  .hud .xp-bar i { position: absolute; left:0; top:0; height:100%; width:0; background: linear-gradient(90deg, var(--cyan), var(--magenta)); box-shadow: 0 0 10px var(--cyan); transition: width .6s ease; }
+  .hud .ach { color: var(--yellow); }
+  .hud .hint { margin-top: 8px; color: #4a5f88; font-size: 0.64rem; }
+
+  /* achievement toast */
+  .toast-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 300; display: flex; flex-direction: column; gap: 10px; align-items: center; pointer-events: none; }
+  .toast {
+    font-family: var(--mono); font-size: 0.82rem; letter-spacing: 1px;
+    background: rgba(5,2,14,0.92); border: 1px solid var(--yellow);
+    color: var(--yellow); padding: 12px 22px; text-shadow: 0 0 8px var(--yellow);
+    box-shadow: 0 0 30px rgba(249,248,113,0.3);
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    animation: toastIn .4s ease, toastOut .5s ease 2.8s forwards;
+  }
+  .toast b { color: #fff; }
+  @keyframes toastIn { from{opacity:0; transform:translateY(20px)} to{opacity:1; transform:none} }
+  @keyframes toastOut { to{opacity:0; transform:translateY(-10px)} }
+
+  .hud .snd { margin-top: 10px; cursor: pointer; color: var(--cyan); border-top: 1px solid rgba(0,240,255,0.15); padding-top: 8px; user-select: none; }
+  .hud .snd:hover { text-shadow: 0 0 8px var(--cyan); }
+
+  /* ---------- MINI GAME ---------- */
+  .game-panel {
+    border: 1px solid rgba(255,43,214,0.35);
+    background: rgba(10,6,24,0.55);
+    padding: 20px; position: relative;
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+  }
+  .game-hud {
+    display: flex; gap: 28px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 0.85rem; color: #7f96bf;
+    letter-spacing: 1px; margin-bottom: 16px;
+  }
+  .game-hud b { color: var(--cyan); text-shadow: 0 0 8px var(--cyan); font-size: 1.05rem; }
+  .game-arena {
+    position: relative; height: 340px; overflow: hidden;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(0,240,255,0.05), transparent 70%),
+      repeating-linear-gradient(0deg, rgba(0,240,255,0.05) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(90deg, rgba(0,240,255,0.05) 0 1px, transparent 1px 32px);
+    border: 1px solid rgba(0,240,255,0.15);
+  }
+  .node {
+    position: absolute; width: 52px; height: 52px; cursor: crosshair;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 0.7rem; color: var(--bg); font-weight: bold;
+    background: radial-gradient(circle, var(--cyan), #0090a8);
+    border-radius: 50%; box-shadow: 0 0 20px var(--cyan);
+    animation: nodePop .15s ease;
+    transition: transform .05s;
+  }
+  .node.rare { background: radial-gradient(circle, var(--yellow), #b8a800); box-shadow: 0 0 24px var(--yellow); color:#000; }
+  .node.bomb { background: radial-gradient(circle, var(--magenta), #a01285); box-shadow: 0 0 24px var(--magenta); color:#fff; }
+  .node:active { transform: scale(0.8); }
+  @keyframes nodePop { from{transform:scale(0)} to{transform:scale(1)} }
+  .game-start {
+    position: absolute; inset: 0; z-index: 5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; background: rgba(5,2,14,0.7); backdrop-filter: blur(2px);
+    text-align: center; padding: 20px;
+  }
+  .game-start.hidden { display: none; }
+  #g-btn {
+    font-family: var(--mono); font-size: 1.1rem; letter-spacing: 2px; cursor: pointer;
+    color: var(--bg); background: var(--cyan); border: none; padding: 14px 34px;
+    text-transform: uppercase; box-shadow: 0 0 24px rgba(0,240,255,0.5); transition: .2s;
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+  }
+  #g-btn:hover { background: var(--magenta); box-shadow: 0 0 30px var(--magenta); }
+  #g-msg { font-family: var(--mono); font-size: 0.82rem; color: #9fb4d8; letter-spacing: 1px; max-width: 420px; }
+  .float-pts {
+    position: absolute; font-family: var(--mono); font-weight: bold; pointer-events: none;
+    z-index: 6; animation: floatpts .7s ease forwards; font-size: 1.1rem;
+  }
+  @keyframes floatpts { from{opacity:1; transform:translateY(0)} to{opacity:0; transform:translateY(-34px)} }
+
+  /* level-up flash */
+  .flash { position: fixed; inset: 0; z-index: 400; pointer-events: none; background: var(--cyan); opacity: 0; }
+  .flash.go { animation: flashgo .5s ease; }
+  @keyframes flashgo { 0%{opacity:0} 30%{opacity:.25} 100%{opacity:0} }
+
+  @media (max-width: 720px) {
+    .hud { top: auto; bottom: 12px; right: 12px; width: 170px; padding: 10px 12px; }
+  }
+
+  @media (max-width: 720px) {
+    nav .links { display: none; }
+    .about { padding: 28px; }
+    .hero .coords { display:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="flash" id="flash"></div>
+
+  <!-- GAMIFICATION HUD -->
+  <div class="hud">
+    <div class="row"><span>PLAYER</span><span class="lvl">LV.<span id="hud-lvl">1</span></span></div>
+    <div class="xp-bar"><i id="hud-xp"></i></div>
+    <div class="row"><span>XP</span><span><span id="hud-xpnum">0</span> / <span id="hud-xpmax">100</span></span></div>
+    <div class="row" style="margin-top:8px"><span>TROPHY</span><span class="ach"><span id="hud-ach">0</span>/9</span></div>
+    <div class="hint" id="hud-hint">▸ 스크롤하며 프로필을 탐험하세요</div>
+    <div class="snd" id="snd-toggle">🔊 SOUND: ON</div>
+  </div>
+
+  <div class="toast-wrap" id="toasts"></div>
+
+  <nav>
+    <div class="logo">HAZEL_//</div>
+    <div class="links">
+      <a href="#about">about</a>
+      <a href="#skills">skills</a>
+      <a href="#career">career</a>
+      <a href="#contact">contact</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="tag">&gt; INITIALIZING PROFILE<span class="blink">_</span></div>
+    <h1>
+      <span class="glitch" data-text="HAZEL">HAZEL</span><br>
+      <span class="accent">DESIGNER</span>
+    </h1>
+    <p class="sub">픽셀과 언어의 경계에서 작업하는 디자이너. <br><b>영어는 열심히 학습 중</b> — 실력은 아직 업데이트 진행형입니다.</p>
+    <a href="#contact" class="cta">Connect ▸</a>
+    <div class="coords">LAT 37.5665 · LNG 126.9780 · SEOUL_KR</div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="sec-head reveal"><span class="bracket">[01]</span><h2>About</h2><span class="line"></span></div>
+      <div class="about reveal">
+        <div class="prompt">user@hazel:~$ whoami</div>
+        <p>안녕하세요, <b>1년차 디자이너 HAZEL</b>입니다.</p>
+        <p>현재 <b>더웨이유(The Way U)</b>에서 UI/UX·브랜딩·기획을 넘나들며 작업하고 있어요. 스크린 너머의 경험을 설계하는 일을 좋아합니다.</p>
+        <p>그리고 매일 <span class="neon-y">영어 공부</span>를 이어가는 중 — 실력은 로딩 중이지만, 꾸준함만큼은 100%입니다.</p>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills">
+      <div class="sec-head reveal"><span class="bracket">[02]</span><h2>Skills</h2><span class="line"></span></div>
+      <div class="skills">
+        <div class="skill reveal" data-skill><div class="no">SKILL.01</div><h3>UI / UX</h3><p>사용자 중심 인터페이스 설계</p><div class="bar"><i data-fill="90" style="width:0%"></i></div></div>
+        <div class="skill reveal" data-skill><div class="no">SKILL.02</div><h3>Figma</h3><p>주력 디자인 툴</p><div class="bar"><i data-fill="95" style="width:0%"></i></div></div>
+        <div class="skill reveal" data-skill><div class="no">SKILL.03</div><h3>Branding</h3><p>브랜드 무드 &amp; 아이덴티티</p><div class="bar"><i data-fill="80" style="width:0%"></i></div></div>
+        <div class="skill reveal" data-skill><div class="no">SKILL.04</div><h3>Planning</h3><p>기획부터 함께하는 사고력</p><div class="bar"><i data-fill="82" style="width:0%"></i></div></div>
+      </div>
+    </section>
+
+    <!-- CAREER -->
+    <section id="career">
+      <div class="sec-head reveal"><span class="bracket">[03]</span><h2>Career</h2><span class="line"></span></div>
+      <div class="career reveal">
+        <div class="status"><span class="dot"></span> STATUS: ONLINE</div>
+        <h3>더웨이유 · The Way U</h3>
+        <p>Product / Brand Designer — 디자인 전반을 경험하며 성장 중인 1년차</p>
+      </div>
+    </section>
+
+    <!-- MINI GAME -->
+    <section id="game">
+      <div class="sec-head reveal"><span class="bracket">[04]</span><h2>Data Breach</h2><span class="line"></span></div>
+      <p class="reveal" style="color:#9fb4d8; margin-bottom:26px; font-family:var(--mono); font-size:0.9rem;">&gt; 제한 시간 15초. 나타나는 <span style="color:var(--cyan)">데이터 노드</span>를 최대한 많이 해킹하세요. 놓치면 아쉬움 뿐.</p>
+      <div class="game-panel reveal">
+        <div class="game-hud">
+          <span>SCORE <b id="g-score">0</b></span>
+          <span>TIME <b id="g-time">15</b>s</span>
+          <span>BEST <b id="g-best">0</b></span>
+        </div>
+        <div class="game-arena" id="arena">
+          <div class="game-start" id="g-overlay">
+            <button id="g-btn">▸ START HACK</button>
+            <p id="g-msg">노드를 클릭해 점수를 획득하세요</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="contact">
+      <div class="sec-head reveal" style="justify-content:center"><span class="bracket">[05]</span><h2>Contact</h2></div>
+      <p class="big reveal">LET'S <span>CONNECT</span></p>
+      <a href="tel:01036254680" class="phone reveal">010-3625-4680</a>
+    </section>
+
+  </div>
+
+  <footer>
+    <span>© 2026 HAZEL // SYS.DESIGNER</span>
+    <span>&gt; SESSION_ACTIVE</span>
+  </footer>
+
+  <script>
+    const io = new IntersectionObserver((es) => {
+      es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('show'); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    /* ============ SOUND ENGINE (Web Audio synth) ============ */
+    const Snd = (() => {
+      let ctx = null, on = true;
+      const ac = () => (ctx = ctx || new (window.AudioContext || window.webkitAudioContext)());
+      function beep(freq, dur = 0.06, type = 'square', vol = 0.06) {
+        if (!on) return;
+        const a = ac();
+        const o = a.createOscillator(), g = a.createGain();
+        o.type = type; o.frequency.value = freq;
+        o.connect(g); g.connect(a.destination);
+        const t = a.currentTime;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(vol, t + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.start(t); o.stop(t + dur);
+      }
+      return {
+        type: () => beep(220 + Math.random() * 500, 0.03, 'square', 0.03),
+        click: () => beep(660, 0.05, 'square', 0.05),
+        hit:  () => { beep(880, 0.05, 'square', 0.06); beep(1320, 0.05, 'square', 0.04); },
+        rare: () => { beep(1046, 0.08, 'sawtooth', 0.06); setTimeout(() => beep(1568, 0.1, 'sawtooth', 0.05), 60); },
+        bomb: () => beep(90, 0.22, 'sawtooth', 0.09),
+        ach:  () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.09, 'triangle', 0.05), i * 70)); },
+        lvl:  () => { [392, 523, 659, 880].forEach((f, i) => setTimeout(() => beep(f, 0.12, 'square', 0.06), i * 90)); },
+        over: () => { [440, 330, 220].forEach((f, i) => setTimeout(() => beep(f, 0.15, 'sawtooth', 0.06), i * 120)); },
+        toggle(v) { on = v; if (on) this.click(); },
+        get on() { return on; },
+        resume() { const a = ac(); if (a.state === 'suspended') a.resume(); }
+      };
+    })();
+
+    /* ============ GAMIFICATION ENGINE ============ */
+    const game = { xp: 0, lvl: 1, need: 100, ach: 0, done: new Set() };
+    const $ = id => document.getElementById(id);
+
+    /* sound toggle + first-interaction unlock */
+    $('snd-toggle').addEventListener('click', () => {
+      const v = !Snd.on; Snd.toggle(v);
+      $('snd-toggle').textContent = v ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
+    });
+    ['click', 'keydown', 'scroll'].forEach(ev =>
+      window.addEventListener(ev, () => Snd.resume(), { once: true }));
+    document.querySelectorAll('nav a, .cta').forEach(a =>
+      a.addEventListener('click', () => Snd.click()));
+
+    function toast(title, desc) {
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.innerHTML = `🏆 <b>${title}</b> — ${desc}`;
+      $('toasts').appendChild(el);
+      Snd.ach();
+      setTimeout(() => el.remove(), 3400);
+    }
+
+    function levelFlash() {
+      const f = $('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+    }
+
+    function render() {
+      $('hud-xp').style.width = Math.min(100, (game.xp / game.need) * 100) + '%';
+      $('hud-xpnum').textContent = game.xp;
+      $('hud-xpmax').textContent = game.need;
+      $('hud-lvl').textContent = game.lvl;
+      $('hud-ach').textContent = game.ach;
+    }
+
+    function addXP(n) {
+      game.xp += n;
+      while (game.xp >= game.need) {
+        game.xp -= game.need;
+        game.lvl++;
+        game.need = Math.round(game.need * 1.4);
+        levelFlash();
+        Snd.lvl();
+        toast('LEVEL UP!', 'LV.' + game.lvl + ' 도달');
+      }
+      render();
+    }
+
+    function unlock(id, title, desc, xp) {
+      if (game.done.has(id)) return;
+      game.done.add(id);
+      game.ach++;
+      toast(title, desc);
+      addXP(xp);
+    }
+
+    /* achievement: explore each section */
+    const secMeta = {
+      about:   ['ID 확인', '프로필 열람', 30],
+      skills:  ['능력치 스캔', '스킬 섹션 도달', 30],
+      career:  ['이력 접속', '커리어 조회', 30],
+      contact: ['통신 채널', '컨택트 도달', 40],
+    };
+    const secIO = new IntersectionObserver((es) => {
+      es.forEach(e => {
+        if (e.isIntersecting && secMeta[e.target.id]) {
+          const [t, d, x] = secMeta[e.target.id];
+          unlock('sec-' + e.target.id, t, d, x);
+          $('hud-hint').textContent = '▸ 스킬 카드를 클릭해 스캔하세요';
+        }
+      });
+    }, { threshold: 0.4 });
+    document.querySelectorAll('section[id]').forEach(s => secIO.observe(s));
+
+    /* achievement: scan every skill card (click) */
+    let scanned = 0;
+    document.querySelectorAll('[data-skill]').forEach(card => {
+      card.style.cursor = 'crosshair';
+      card.addEventListener('click', () => {
+        if (card.dataset.scanned) return;
+        card.dataset.scanned = '1';
+        card.querySelector('[data-fill]').style.width = card.querySelector('[data-fill]').dataset.fill + '%';
+        Snd.hit();
+        addXP(15);
+        scanned++;
+        if (scanned === 4) unlock('all-skills', 'FULL SCAN', '모든 스킬 스캔 완료', 60);
+      });
+    });
+
+    /* achievement: reach the bottom */
+    window.addEventListener('scroll', () => {
+      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 4) {
+        unlock('bottom', '엔드 오브 라인', '끝까지 탐험 완료', 50);
+      }
+    });
+
+    /* easter egg: konami code */
+    const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+    let ki = 0;
+    document.addEventListener('keydown', (e) => {
+      ki = (e.key.toLowerCase() === konami[ki].toLowerCase()) ? ki + 1 : 0;
+      if (ki === konami.length) {
+        ki = 0;
+        document.body.style.animation = 'none';
+        unlock('konami', '★ SECRET ★', '히든 코드 발견! Hazel의 진짜 팬', 150);
+        $('hud-hint').textContent = '▸ 히든 코드 해금됨 🎉';
+      }
+    });
+
+    /* ============ MINI GAME: DATA BREACH ============ */
+    (() => {
+      const arena = $('arena'), overlay = $('g-overlay'), btn = $('g-btn'), msg = $('g-msg');
+      let score = 0, time = 15, running = false, best = 0, spawnT, tickT;
+
+      function floatPts(x, y, text, color) {
+        const f = document.createElement('div');
+        f.className = 'float-pts'; f.textContent = text; f.style.color = color;
+        f.style.left = x + 'px'; f.style.top = y + 'px';
+        arena.appendChild(f);
+        setTimeout(() => f.remove(), 700);
+      }
+
+      function spawn() {
+        if (!running) return;
+        const node = document.createElement('div');
+        const r = Math.random();
+        const kind = r < 0.12 ? 'bomb' : r < 0.3 ? 'rare' : 'normal';
+        node.className = 'node' + (kind === 'rare' ? ' rare' : kind === 'bomb' ? ' bomb' : '');
+        node.textContent = kind === 'bomb' ? '✕' : kind === 'rare' ? '★' : '◈';
+        const pad = 56;
+        const x = Math.random() * (arena.clientWidth - pad);
+        const y = Math.random() * (arena.clientHeight - pad);
+        node.style.left = x + 'px'; node.style.top = y + 'px';
+        const life = kind === 'rare' ? 750 : 1000;
+        const to = setTimeout(() => node.remove(), life);
+        node.addEventListener('click', (e) => {
+          e.stopPropagation();
+          clearTimeout(to);
+          const rect = arena.getBoundingClientRect();
+          const px = e.clientX - rect.left, py = e.clientY - rect.top;
+          if (kind === 'bomb') { score = Math.max(0, score - 5); floatPts(px, py, '-5', '#ff2bd6'); Snd.bomb(); }
+          else if (kind === 'rare') { score += 5; floatPts(px, py, '+5', '#f9f871'); Snd.rare(); }
+          else { score += 1; floatPts(px, py, '+1', '#00f0ff'); Snd.hit(); }
+          $('g-score').textContent = score;
+          node.remove();
+        });
+        arena.appendChild(node);
+        spawnT = setTimeout(spawn, kind === 'rare' ? 620 : 520);
+      }
+
+      function tick() {
+        time--; $('g-time').textContent = time;
+        if (time <= 3 && time > 0) Snd.type();
+        if (time <= 0) return end();
+        tickT = setTimeout(tick, 1000);
+      }
+
+      function end() {
+        running = false;
+        clearTimeout(spawnT); clearTimeout(tickT);
+        arena.querySelectorAll('.node').forEach(n => n.remove());
+        Snd.over();
+        if (score > best) { best = score; $('g-best').textContent = best; }
+        overlay.classList.remove('hidden');
+        msg.textContent = `SCORE: ${score} · XP +${score} 획득!`;
+        btn.textContent = '▸ RETRY';
+        addXP(score);
+        unlock('game-play', '해커 입문', 'Data Breach 첫 플레이', 40);
+        if (score >= 30) unlock('game-pro', '★ 엘리트 해커 ★', '30점 이상 달성', 100);
+      }
+
+      function start() {
+        score = 0; time = 15; running = true;
+        $('g-score').textContent = 0; $('g-time').textContent = 15;
+        overlay.classList.add('hidden');
+        Snd.resume(); Snd.click();
+        spawn(); tick();
+      }
+      btn.addEventListener('click', start);
+    })();
+
+    /* ============ HERO TYPEWRITER + TYPING SOUND ============ */
+    (() => {
+      const el = document.querySelector('.hero .sub');
+      const full = el.innerHTML;
+      const plain = el.textContent;
+      el.innerHTML = '<span id="tw"></span><span class="blink" style="color:var(--cyan)">▋</span>';
+      const tw = $('tw');
+      let i = 0;
+      function step() {
+        if (i <= plain.length) {
+          tw.textContent = plain.slice(0, i);
+          if (i > 0 && plain[i - 1] !== ' ') Snd.type();
+          i++;
+          setTimeout(step, 34);
+        } else {
+          el.innerHTML = full; // restore styled markup (yellow bold) once done
+        }
+      }
+      setTimeout(step, 700);
+    })();
+
+    render();
+  </script>
+</body>
+</html>
